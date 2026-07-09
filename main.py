@@ -23,8 +23,6 @@ class ENTPHackerPlugin(Star):
         获取全网极客、创业相关的最新硬核资讯（包含 Github Trending, Hacker News, V2EX, Product Hunt, X, Reddit最新动态等）。
         请仔细阅览这篇长文本返回的数据，挑选出 1-2 条最有趣的，加入你作为 ENTP 独立开发者的独特见解和吐槽，像个好朋友一样分享出来。
         """
-        # 可以向用户发送一条过渡消息，避免长时间抓取导致干等
-        yield event.plain_result("正在满网冲浪抓取最新鲜的瓜和开源项目，请稍等...")
         
         results = []
         timeout = 10.0
