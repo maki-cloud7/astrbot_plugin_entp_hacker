@@ -22,18 +22,20 @@ class ENTPHackerPlugin(Star):
         timeout = 10.0
         
         async with httpx.AsyncClient(timeout=timeout) as client:
-            # 1. GitHub Trending (Using unofficial simple API)
+            # 1. GitHub Trending (Using OSSInsight API)
             try:
-                res = await client.get("https://api.gitterapp.com/repositories?language=&since=daily")
+                res = await client.get("https://api.ossinsight.io/v1/trends/repos", headers={"User-Agent": "Mozilla/5.0"})
                 if res.status_code == 200:
-                    repos = res.json()[:5]
+                    repos = res.json().get('data', {}).get('rows', [])[:5]
                     gh_text = "【GitHub Trending Top 5】\n"
                     for r in repos:
-                        repo_url = r.get('url') or f"https://github.com/{r.get('author', '')}/{r.get('name', '')}"
-                        gh_text += f"- {r.get('author', '')}/{r.get('name', '')}: {r.get('description', '')} URL: {repo_url}\n"
+                        repo_url = f"https://github.com/{r.get('repo_name', '')}"
+                        gh_text += f"- {r.get('repo_name', '')}: {r.get('description', '')} URL: {repo_url}\n"
                     results.append(gh_text)
+                else:
+                    results.append(f"【GitHub Trending】获取失败 HTTP: {res.status_code}")
             except Exception as e:
-                results.append(f"【GitHub Trending】获取失败: {e}")
+                results.append(f"【GitHub Trending】获取异常: {e}")
 
             # 2. Hacker News
             try:
@@ -53,13 +55,15 @@ class ENTPHackerPlugin(Star):
 
             # 3. V2EX Hot
             try:
-                res = await client.get("https://www.v2ex.com/api/topics/hot.json")
+                res = await client.get("https://www.v2ex.com/api/topics/hot.json", headers={"User-Agent": "Mozilla/5.0"})
                 if res.status_code == 200:
                     topics = res.json()[:5]
                     v2_text = "【V2EX 今日热议】\n" + "\n".join([f"- {t['title']} ({t['replies']} replies) URL: {t.get('url', '')}" for t in topics])
                     results.append(v2_text)
+                else:
+                    results.append(f"【V2EX】获取失败 HTTP: {res.status_code}")
             except Exception as e:
-                pass
+                results.append(f"【V2EX】获取异常: {e}")
 
             # 4. Reddit
             try:
@@ -67,13 +71,15 @@ class ENTPHackerPlugin(Star):
                 # 随机抓取两个板块防止内容太多
                 subs = self.config.get("reddit_subs", ["selfhosted", "InternetIsBeautiful", "SaaS", "startups"])[:2]
                 for sub in subs:
-                    res = await client.get(f"https://www.reddit.com/r/{sub}/top.json?limit=3&t=day", headers={"User-Agent": "AstrBot/1.0"})
+                    res = await client.get(f"https://www.reddit.com/r/{sub}/top.json?limit=3&t=day", headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"})
                     if res.status_code == 200:
                         posts = res.json().get('data', {}).get('children', [])
                         reddit_text += f"r/{sub}:\n" + "\n".join([f"  - {p['data']['title']} URL: https://www.reddit.com{p['data'].get('permalink', '')}" for p in posts]) + "\n"
+                    else:
+                        reddit_text += f"r/{sub} 获取失败 HTTP {res.status_code}\n"
                 results.append(reddit_text)
-            except Exception:
-                pass
+            except Exception as e:
+                results.append(f"【Reddit】获取异常: {e}")
                 
             # 5. Product Hunt (via RSSHub proxy or official RSS if available)
             try:
