@@ -16,11 +16,6 @@ class ENTPHackerPlugin(Star):
         """
         获取全网极客、创业相关的最新硬核资讯（包含 Github Trending, Hacker News, V2EX, Product Hunt, X, Reddit最新动态等）。
         请仔细阅览这篇长文本返回的数据，挑选出 1-2 条最有趣的，加入你作为 ENTP 独立开发者的独特见解和吐槽，像个好朋友一样分享出来。
-        【极其重要的强制要求】：
-        1. 用户的聊天客户端是纯文本环境，**完全不支持任何 Markdown 语法**！
-        2. 绝对禁止使用任何 Markdown 符号进行排版（禁止使用 `#`标题、`**`加粗、`>`引用、`-`列表等）。请用普通的换行、空格或者基础标点符号（如 1. 2. 3.）来组织你的发言。
-        3. 绝对禁止使用 `[文字](链接)` 的格式。在介绍完一条资讯后，**必须**单开一行，以纯文本形式直接原样粘贴对应的原始 URL！例如：
-        链接：https://github.com/...
         """
         
         results = []
@@ -118,4 +113,16 @@ class ENTPHackerPlugin(Star):
         if len(final_context) > max_length:
             final_context = final_context[:max_length] + "\n...[已截断，内容过多]"
             
-        return final_context
+        # 强制大模型输出格式的指令（直接附加在返回给大模型的文本末尾，确保它能看到）
+        system_instruction = (
+            "\n\n====================\n"
+            "【SYSTEM INSTRUCTION FOR LLM - 极其重要的强制要求】\n"
+            "请阅读上述抓取到的资讯，挑选 1-2 条最有趣的进行分析和吐槽。\n"
+            "1. 用户的聊天客户端是纯文本环境，**完全不支持任何 Markdown 语法**！\n"
+            "2. 绝对禁止使用任何 Markdown 符号进行排版（禁止使用 `#`标题、`**`加粗、`>`引用、`-`列表等）。请用普通的换行、空格或者基础标点符号（如 1. 2. 3.）来组织你的发言。\n"
+            "3. 绝对禁止使用 `[文字](链接)` 的格式。在介绍完一条资讯后，**必须**单开一行，以纯文本形式直接原样粘贴对应的原始 URL！例如：\n"
+            "链接：https://github.com/xxx\n"
+            "如果你不输出原始 URL，用户将无法阅读原文！"
+        )
+        
+        return final_context + system_instruction
