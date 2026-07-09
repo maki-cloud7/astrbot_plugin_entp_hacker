@@ -1,0 +1,6 @@
+name: astrbot_plugin_entp_hacker
+desc: ENTP极客挚友资讯聚合插件
+version: 1.0.0
+author: YourName
+repo: https://github.com/AstrBotDevs/AstrBot
+short_desc: 一款为你量身定制的资讯汇聚 LLM 工具。
