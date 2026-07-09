@@ -27,7 +27,10 @@ class ENTPHackerPlugin(Star):
                 res = await client.get("https://api.gitterapp.com/repositories?language=&since=daily")
                 if res.status_code == 200:
                     repos = res.json()[:5]
-                    gh_text = "【GitHub Trending Top 5】\n" + "\n".join([f"- {r['author']}/{r['name']}: {r.get('description', '')} (URL: {r.get('url', f\"https://github.com/{r['author']}/{r['name']}\")})" for r in repos])
+                    gh_text = "【GitHub Trending Top 5】\n"
+                    for r in repos:
+                        repo_url = r.get('url') or f"https://github.com/{r.get('author', '')}/{r.get('name', '')}"
+                        gh_text += f"- {r.get('author', '')}/{r.get('name', '')}: {r.get('description', '')} URL: {repo_url}\n"
                     results.append(gh_text)
             except Exception as e:
                 results.append(f"【GitHub Trending】获取失败: {e}")
