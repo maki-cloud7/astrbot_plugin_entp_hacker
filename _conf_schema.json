@@ -1,0 +1,17 @@
+{
+  "x_auth_token": {
+    "description": "X(Twitter)网页版 F12 抓取的 auth_token Cookie",
+    "type": "string",
+    "default": ""
+  },
+  "x_target_users": {
+    "description": "需要关注的 X 博主 handle (不要带@)",
+    "type": "list",
+    "default": ["sama", "karpathy", "paulg", "ycombinator"]
+  },
+  "reddit_subs": {
+    "description": "关注的 Reddit 节点",
+    "type": "list",
+    "default": ["selfhosted", "InternetIsBeautiful", "SaaS", "startups"]
+  }
+}

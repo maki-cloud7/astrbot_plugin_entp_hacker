@@ -1,18 +1,12 @@
 import asyncio
 import httpx
 import feedparser
-from pydantic import BaseModel, Field
 from twikit import Client
 from astrbot.api.all import *
 
-class Config(BaseModel):
-    x_auth_token: str = Field("", description="X(Twitter)网页版 F12 抓取的 auth_token Cookie")
-    x_target_users: list[str] = Field(["sama", "karpathy", "paulg", "ycombinator"], description="需要关注的 X 博主 handle (不要带@)")
-    reddit_subs: list[str] = Field(["selfhosted", "InternetIsBeautiful", "SaaS", "startups"], description="关注的 Reddit 节点")
-
 @register("entp_hacker", "AstrBot", "1.0.0", "ENTP独立开发者专用资讯源整合 (包含 X, HN, Github等)")
 class ENTPHackerPlugin(Star):
-    def __init__(self, context: Context, config: Config):
+    def __init__(self, context: Context, config: dict):
         super().__init__(context)
         self.config = config
         self.twikit_client = Client('en-US')
@@ -67,7 +61,7 @@ class ENTPHackerPlugin(Star):
             try:
                 reddit_text = "【Reddit 热门】\n"
                 # 随机抓取两个板块防止内容太多
-                subs = self.config.reddit_subs[:2]
+                subs = self.config.get("reddit_subs", ["selfhosted", "InternetIsBeautiful", "SaaS", "startups"])[:2]
                 for sub in subs:
                     res = await client.get(f"https://www.reddit.com/r/{sub}/top.json?limit=3&t=day", headers={"User-Agent": "AstrBot/1.0"})
                     if res.status_code == 200:
@@ -91,10 +85,13 @@ class ENTPHackerPlugin(Star):
 
         # 6. X (Twitter) via twikit
         x_text = "【X (Twitter) 关注圈子最新动态】\n"
-        if self.config.x_auth_token:
+        x_auth_token = self.config.get("x_auth_token", "")
+        x_target_users = self.config.get("x_target_users", ["sama", "karpathy", "paulg", "ycombinator"])
+        
+        if x_auth_token:
             try:
-                self.twikit_client.set_cookies({'auth_token': self.config.x_auth_token})
-                for user_handle in self.config.x_target_users[:3]: # 限制数量
+                self.twikit_client.set_cookies({'auth_token': x_auth_token})
+                for user_handle in x_target_users[:3]: # 限制数量
                     user = await self.twikit_client.get_user_by_screen_name(user_handle)
                     if user:
                         tweets = await user.get_tweets('Tweets', count=3)
