@@ -90,11 +90,12 @@ class ENTPHackerPlugin(Star):
         # 6. X (Twitter) via twikit
         x_text = "【X (Twitter) 关注圈子最新动态】\n"
         x_auth_token = self.config.get("x_auth_token", "")
+        x_ct0 = self.config.get("x_ct0", "")
         x_target_users = self.config.get("x_target_users", ["sama", "karpathy", "paulg", "ycombinator"])
         
-        if x_auth_token:
+        if x_auth_token and x_ct0:
             try:
-                self.twikit_client.set_cookies({'auth_token': x_auth_token})
+                self.twikit_client.set_cookies({'auth_token': x_auth_token, 'ct0': x_ct0})
                 for user_handle in x_target_users[:3]: # 限制数量
                     user = await self.twikit_client.get_user_by_screen_name(user_handle)
                     if user:
@@ -104,9 +105,9 @@ class ENTPHackerPlugin(Star):
                             x_text += f"  - {t.text} URL: https://x.com/{user_handle}/status/{t.id}\n"
                 results.append(x_text)
             except Exception as e:
-                results.append(f"【X (Twitter)】获取失败（可能是 auth_token 错误或过期）: {e}")
+                results.append(f"【X (Twitter)】获取失败（可能是 auth_token 或 ct0 错误/过期）: {e}")
         else:
-            results.append("【X (Twitter)】未配置 auth_token，跳过。")
+            results.append("【X (Twitter)】未配置 auth_token 或 ct0，跳过。")
 
         # 最终汇总
         final_context = "\n\n".join(results)

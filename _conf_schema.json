@@ -4,6 +4,11 @@
     "type": "string",
     "default": ""
   },
+  "x_ct0": {
+    "description": "X(Twitter)网页版 F12 抓取的 ct0 Cookie (必填，否则无法抓取)",
+    "type": "string",
+    "default": ""
+  },
   "x_target_users": {
     "description": "需要关注的 X 博主 handle (不要带@)",
     "type": "list",
