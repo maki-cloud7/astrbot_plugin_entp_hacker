@@ -16,6 +16,7 @@ class ENTPHackerPlugin(Star):
         """
         获取全网极客、创业相关的最新硬核资讯（包含 Github Trending, Hacker News, V2EX, Product Hunt, X, Reddit最新动态等）。
         请仔细阅览这篇长文本返回的数据，挑选出 1-2 条最有趣的，加入你作为 ENTP 独立开发者的独特见解和吐槽，像个好朋友一样分享出来。
+        注意：在提到具体的资讯时，必须把原文附带的 URL 链接也以 markdown 链接的形式发出来，让用户可以点击查看来源。
         """
         
         results = []
@@ -27,7 +28,7 @@ class ENTPHackerPlugin(Star):
                 res = await client.get("https://api.gitterapp.com/repositories?language=&since=daily")
                 if res.status_code == 200:
                     repos = res.json()[:5]
-                    gh_text = "【GitHub Trending Top 5】\n" + "\n".join([f"- {r['author']}/{r['name']}: {r.get('description', '')}" for r in repos])
+                    gh_text = "【GitHub Trending Top 5】\n" + "\n".join([f"- {r['author']}/{r['name']}: {r.get('description', '')} (URL: {r.get('url', f\"https://github.com/{r['author']}/{r['name']}\")})" for r in repos])
                     results.append(gh_text)
             except Exception as e:
                 results.append(f"【GitHub Trending】获取失败: {e}")
@@ -42,7 +43,8 @@ class ENTPHackerPlugin(Star):
                         item_res = await client.get(f"https://hacker-news.firebaseio.com/v0/item/{item_id}.json")
                         if item_res.status_code == 200:
                             item = item_res.json()
-                            hn_text += f"- {item.get('title', '')} (Score: {item.get('score', 0)})\n"
+                            url = item.get('url', f"https://news.ycombinator.com/item?id={item_id}")
+                            hn_text += f"- {item.get('title', '')} (Score: {item.get('score', 0)}) URL: {url}\n"
                     results.append(hn_text)
             except Exception as e:
                 results.append(f"【Hacker News】获取失败: {e}")
@@ -52,7 +54,7 @@ class ENTPHackerPlugin(Star):
                 res = await client.get("https://www.v2ex.com/api/topics/hot.json")
                 if res.status_code == 200:
                     topics = res.json()[:5]
-                    v2_text = "【V2EX 今日热议】\n" + "\n".join([f"- {t['title']} ({t['replies']} replies)" for t in topics])
+                    v2_text = "【V2EX 今日热议】\n" + "\n".join([f"- {t['title']} ({t['replies']} replies) URL: {t.get('url', '')}" for t in topics])
                     results.append(v2_text)
             except Exception as e:
                 pass
@@ -66,7 +68,7 @@ class ENTPHackerPlugin(Star):
                     res = await client.get(f"https://www.reddit.com/r/{sub}/top.json?limit=3&t=day", headers={"User-Agent": "AstrBot/1.0"})
                     if res.status_code == 200:
                         posts = res.json().get('data', {}).get('children', [])
-                        reddit_text += f"r/{sub}:\n" + "\n".join([f"  - {p['data']['title']}" for p in posts]) + "\n"
+                        reddit_text += f"r/{sub}:\n" + "\n".join([f"  - {p['data']['title']} URL: https://www.reddit.com{p['data'].get('permalink', '')}" for p in posts]) + "\n"
                 results.append(reddit_text)
             except Exception:
                 pass
@@ -78,7 +80,7 @@ class ENTPHackerPlugin(Star):
                 feed = feedparser.parse("https://www.producthunt.com/feed")
                 ph_text = "【Product Hunt 最新产品】\n"
                 for entry in feed.entries[:5]:
-                    ph_text += f"- {entry.title}: {entry.description}\n"
+                    ph_text += f"- {entry.title}: {entry.description} URL: {entry.link}\n"
                 results.append(ph_text)
             except Exception:
                 pass
@@ -97,7 +99,7 @@ class ENTPHackerPlugin(Star):
                         tweets = await user.get_tweets('Tweets', count=3)
                         x_text += f"@{user_handle}:\n"
                         for t in tweets:
-                            x_text += f"  - {t.text}\n"
+                            x_text += f"  - {t.text} URL: https://x.com/{user_handle}/status/{t.id}\n"
                 results.append(x_text)
             except Exception as e:
                 results.append(f"【X (Twitter)】获取失败（可能是 auth_token 错误或过期）: {e}")
